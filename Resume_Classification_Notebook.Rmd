@@ -49,3 +49,50 @@ resume_data = resume_data.drop(columns=['ID'])
 print(resume_data.head())
 ```
 
+Exploratory Data Analysis (EDA)
+```{python}
+print(category_counts)
+```
+The above code provides the count of each job category present in the dataset. The purpose of this is to check for imbalances in the data, as this could lead to biased classification models, which could perform poorly on underrepresented categories. 
+
+From the output, the top categories are INFORMATION-TECHNOLOGY and BUSINESS-DEVELOPMENT, both containing 120 resumes. Many of the other categories are right below 120, with the top 15 categories(by count) all within 10 resumes of the top two.
+
+There are a few underrepresented categories, specifically in AGRICULTURE (63 resumes), AUTOMOBILE (36 resumes), and BPO (22 resumes). Clearly, there is a significant imbalance in these categories compared to the others, which could affect classification model performance. To combat this class imbalance, techniques such as stratified train-test splits will ensure that all categories are represented proportionally.  
+
+The imbalances are shown in the following bar chart:
+
+```{python}
+import matplotlib.pyplot as plt
+
+category_counts = resume_data['Category'].value_counts()
+plt.figure(figsize=(16, 8))
+plt.bar(category_counts.index, category_counts.values)
+plt.title('Distribution of Resumes by Job Category')
+plt.xlabel('Job Category')
+plt.ylabel('Number of Resumes')
+plt.xticks(rotation=90)
+plt.subplots_adjust(bottom=0.5)
+plt.show()
+```
+```{python}
+resume_data['Text_Length'] = resume_data['Cleaned_Resume_str'].apply(len)
+
+plt.figure(figsize=(9, 4))
+plt.hist(resume_data['Text_Length'], bins=20, edgecolor='black')
+plt.title('Distribution of Resume Text Lengths', fontsize=14)
+plt.xlabel('Text Length (characters)', fontsize=12)
+plt.ylabel('Frequency', fontsize=12)
+
+plt.xticks(rotation=45, ha='right')
+
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+from collections import Counter
+
+it_resumes = resume_data[resume_data['Category'] == 'INFORMATION-TECHNOLOGY']
+common_words = Counter(" ".join(it_resumes['Cleaned_Resume_str']).split()).most_common(20)
+print(common_words)
+```

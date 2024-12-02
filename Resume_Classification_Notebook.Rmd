@@ -18,6 +18,8 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 import seaborn as sns
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 file_path = "/Users/jessedimarzo/Downloads/Resume.csv"
 
@@ -167,26 +169,39 @@ plt.ylabel('Actual')
 plt.show()
 ```
 
-Upon trial and error to improve the logistic regression model, only slight improvements could be made, with methods such as SMOTE, and n-grams being utilized. The accuracy for each attempt to improve the model remained at around 65-67%. For this reason, other models will be pursued, and a RandomForest model will be created in the next step.
+Upon trial and error to improve the logistic regression model, only slight improvements could be made, with methods such as SMOTE, and n-grams being utilized. The accuracy for each attempt to improve the model remained at around 65-67%. For this reason, other models will be pursued, and a Random Forest model will be created in the next step.
 
 
 ```{python}
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-# Train Random Forest model
 rf_model = RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42)
 rf_model.fit(X_train_ngram, y_train)
 
-# Predict on the test set
 y_pred_rf = rf_model.predict(X_test_ngram)
 
-# Evaluate the model
 print("Random Forest Accuracy:", accuracy_score(y_test, y_pred_rf))
 print("\nRandom Forest Classification Report:\n", classification_report(y_test, y_pred_rf))
-
-
 ```
+As can be seen in in the above classification report, accuracy increased from 65-67% to 77% with Random Forest , and the weighted average F1-score improved to 76%, indicating a better balance between precision and recall across all classes.
 
+```{python}
+rf_model = RandomForestClassifier(n_estimators=200, class_weight='balanced', random_state=42)
+rf_model.fit(X_train_ngram, y_train)
+
+y_pred_rf = rf_model.predict(X_test_ngram)
+
+print("Random Forest Accuracy:", accuracy_score(y_test, y_pred_rf))
+print("\nRandom Forest Classification Report:\n", classification_report(y_test, y_pred_rf))
+```
+Increasing the number of estimators to 200 increased overall accuracy to ~79%. 300 and 400 estimators were tested to see if they improved the scores, but they either remained the same, or decreased. Thus, 200 appears to be the optimal number of estimators.
+
+```{python}
+from xgboost import XGBClassifier
+
+xgb_model = XGBClassifier(random_state=42)
+xgb_model.fit(X_train_ngram, y_train)
+y_pred_xgb = xgb_model.predict(X_test_ngram)
+
+print("XGBoost Accuracy:", accuracy_score(y_test, y_pred_xgb))
+print("\nClassification Report:\n", classification_report(y_test, y_pred_xgb))
+```
+To continue the process of trial and error of different models and hyperparameters, an XGBoost model demonstrated significant performance improvements compared to the previous models. The model improved to an accuracy of ~80%, and an F1-score of ~80%, indicating a better balance between precision and recall.

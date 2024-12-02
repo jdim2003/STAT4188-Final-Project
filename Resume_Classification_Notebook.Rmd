@@ -15,7 +15,9 @@ import matplotlib.pyplot as plt
 from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
-
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+import seaborn as sns
 
 file_path = "/Users/jessedimarzo/Downloads/Resume.csv"
 
@@ -91,6 +93,7 @@ plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
 plt.show()
 ```
+The above code aids in examning variability in the length of resumes. It appears that visually, the distribution of resume text lengths is approximately normal, although there may be extreme outliers as seen in the 25000 and 35000 character length resumes. This is just another part of the EDA, to gain a better understanding of the resumes as a whole.
 
 ```{python}
 it_resumes = resume_data[resume_data['Category'] == 'INFORMATION-TECHNOLOGY']
@@ -103,13 +106,64 @@ aviation_resumes = resume_data[resume_data['Category'] == 'AVIATION']
 common_words1 = Counter(" ".join(aviation_resumes['Cleaned_Resume_str']).split()).most_common(30)
 print(common_words1)
 ```
+The counter package from the collections library is quite useful to see the most frequent words in each category. By doing so, we get a general idea of which words may be distinct between categories. For example, in INFORMATION-TECHNOLOGY, we see that technology, systems, and network are extremely frequent words, and in AVIATION, aircraft, state, city are very common. While this step provides insights into distinctions between categories, it reveals some issues that may arise for the machine learning. These two categories are vastly different, yet 'management' and 'system' are highly used in both, potentially exposing opportunity for confusion between the two categories.
+
+
 ```{python}
 vectorizer = TfidfVectorizer(max_features=5000)
 tfidf_matrix = vectorizer.fit_transform(resume_data['Cleaned_Resume_str'])
 ```
+The purpose of this feature engineering is to transform textual data into numerical features for modeling. The "Cleaned_Resume_str" column is converted into a sparse of TF-IDF scores, capturing the importance of certain words within each category.
 ```{python}
 label_encoder = LabelEncoder()
 resume_data['Category_Label'] = label_encoder.fit_transform(resume_data['Category'])
 ```
+Encoding job categories into numeric labels is crucial to allow for machine learning. Here, each category is labeled as an integer counting from 0 onward.
 
+```{python}
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+X_train, X_test, y_train, y_test = train_test_split(
+    tfidf_matrix, resume_data['Category_Label'], test_size=0.2, stratify=resume_data['Category_Label'], random_state=42
+)
+```
+To begin modeling, the data is split into a training and testing split, using a traditional 80/20 split. This stratified sampling will ensure a proportional representation of categories in both sets.
+
+```{python}
+log_reg_model = LogisticRegression(max_iter=1000, random_state=42)
+log_reg_model.fit(X_train, y_train)
+
+y_pred = log_reg_model.predict(X_test)
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+```
+A baseline logistic regression was conducted to see where the model is at in its current state, with its current features. The model is trained on the TF_IDF features, and provides performance evaluations to determine the precision, recall, and F1 score of the model.
+
+As you can see, the numbers are not bad, but not great either. 
+
+```{python}
+log_reg_weighted_model = LogisticRegression(max_iter=1000, class_weight='balanced', random_state=42)
+
+log_reg_weighted_model.fit(X_train, y_train)
+
+y_pred_weighted = log_reg_weighted_model.predict(X_test)
+
+print("Accuracy with class weighting:", accuracy_score(y_test, y_pred_weighted))
+print("\nClassification Report:\n", classification_report(y_test, y_pred_weighted))
+```
+To begin the trial and error of improving the model, this model addresses class imbalance by using weighted logistic regression. Essentially, this assigns higher weights to underrepresented classes to improve their recall. This was deemed necessary because of the lower macro avg in the previous model, showing that underrepresented classes had poor performance.
+
+The updated model with balanced weight classes improved accuracy slightly compared to the previous one, but not by much. Category 5 and 8, which previously had zeros across the report, improved to non-zero precision, recall, and F1 scores, showing some improvements. Nonetheless, challenges persist with many low scores across categories.
+
+```{python}
+conf_matrix_weighted = confusion_matrix(y_test, y_pred_weighted)
+plt.figure(figsize=(12, 8))
+sns.heatmap(conf_matrix_weighted, annot=True, fmt='d', cmap='Blues', 
+            xticklabels=label_encoder.classes_, 
+            yticklabels=label_encoder.classes_)
+plt.title('Confusion Matrix with Class Weighting')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.show()
+```
 

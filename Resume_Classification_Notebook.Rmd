@@ -1,0 +1,51 @@
+---
+title: "Resume Dataset"
+output: pdf_document
+date: "2024-12-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{python}
+import pandas as pd
+import re
+
+file_path = "/Users/jessedimarzo/Downloads/Resume.csv"
+
+resume_data = pd.read_csv(file_path)
+
+resume_data.head(5)
+```
+```{python}
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r'[^a-z\s]', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
+# Convert text to lowercase, remove special characters, numbers, and punctuation, remove extra whitespace, using the built in python library re. This is not something we discussed in class, but it is very helpful since we are dealing with strings in this dataset.
+```
+
+```{python}
+resume_data['Cleaned_Resume_str'] = resume_data['Resume_str'].apply(clean_text)
+# Apply the created cleaning function to the Resume_str column in the dataset
+```
+
+
+
+```{python}
+print(resume_data['ID'].is_unique)
+# Just to confirm that the ID is a unique identifier, which the output of "True" confirmed. 
+# The ID column is unnecessary for the analysis and modeling we will be performing, and thus will be removed at this stage in the cleaning process.
+```
+
+```{python}
+# Drop the ID column as stated
+resume_data = resume_data.drop(columns=['ID'])
+
+# To confirm the column is removed
+print(resume_data.head())
+```
+

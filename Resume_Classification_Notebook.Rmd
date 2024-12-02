@@ -167,3 +167,26 @@ plt.ylabel('Actual')
 plt.show()
 ```
 
+Upon trial and error to improve the logistic regression model, only slight improvements could be made, with methods such as SMOTE, and n-grams being utilized. The accuracy for each attempt to improve the model remained at around 65-67%. For this reason, other models will be pursued, and a RandomForest model will be created in the next step.
+
+
+```{python}
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Train Random Forest model
+rf_model = RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42)
+rf_model.fit(X_train_ngram, y_train)
+
+# Predict on the test set
+y_pred_rf = rf_model.predict(X_test_ngram)
+
+# Evaluate the model
+print("Random Forest Accuracy:", accuracy_score(y_test, y_pred_rf))
+print("\nRandom Forest Classification Report:\n", classification_report(y_test, y_pred_rf))
+
+
+```
+

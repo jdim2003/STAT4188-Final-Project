@@ -96,3 +96,10 @@ it_resumes = resume_data[resume_data['Category'] == 'INFORMATION-TECHNOLOGY']
 common_words = Counter(" ".join(it_resumes['Cleaned_Resume_str']).split()).most_common(20)
 print(common_words)
 ```
+
+```{python}
+aviator_resumes = resume_data[resume_data['Category'] == 'AVIATION']
+common_words1 = Counter(" ".join(aviator_resumes['Cleaned_Resume_str']).split()).most_common(30)
+print(common_words1)
+```
+
